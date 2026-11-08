@@ -56,6 +56,9 @@ public final class ClientSetup {
             // 树叶用 cutout_mipped 是为了远处有 mipmap 过渡，不然会闪；树苗单株用 cutout 更锐利。
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.MAGIC_LEAVES.get(), RenderType.cutoutMipped());
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.MAGIC_SAPLING.get(), RenderType.cutout());
+
+            // 流体方块必须走 translucent 层，否则 alpha 会被当不透明，整滩液体变成实心色块。
+            ItemBlockRenderTypes.setRenderLayer(ModBlocks.MANA_ESSENCE_BLOCK.get(), RenderType.translucent());
         });
     }
 }

@@ -53,6 +53,11 @@ repositories {
         name = 'Sponge'
         url = 'https://repo.spongepowered.org/repository/maven-public/'
     }
+    // 注意：这里故意不引入 Create 的 maven 依赖。
+    // 我们对 Create 的全部耦合都写在数据包里（create:splashing / create:mixing 两个配方 JSON），
+    // 代码里没有任何 import。加 compileOnly/runtimeOnly 只会让每次构建去 Modrinth CDN
+    // 拉 19 MB 的 jar（单连接限速约 11 KB/s，实测能把构建拖到 30 分钟以上），纯属自找麻烦。
+    // 如果以后真的要调用 Create 的 Java API，再按需加回来。
 }
 
 dependencies {

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "magicinduction:item/mana_essence_bucket"
+  }
+}

@@ -3,15 +3,18 @@ package com.hjz.magicinduction;
 import com.hjz.magicinduction.common.MagicLeavesBlock;
 import com.hjz.magicinduction.common.MagicTreeGrower;
 import com.hjz.magicinduction.common.ManaInducerBlock;
+import com.hjz.magicinduction.common.ModFluids;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -87,6 +90,29 @@ public class ModBlocks {
     public static final RegistryObject<Block> MAGIC_PLANKS = BLOCKS.register("magic_planks",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS)
                     .mapColor(MapColor.COLOR_PURPLE)));
+
+    /**
+     * 魔法原液的液体方块。
+     *
+     * <p>purpose: 让桶能倒出来、让原液能在地面上流成一小滩。没有这个方块，桶只能"装"
+     * 不能"放"，Create 工作盆里的原液就只能靠管道抽走，玩家会觉得这是个半成品。
+     *
+     * <p>design note: 参数照着水的反面来——不替换（replaceable 但 noCollission）、
+     * 抗爆拉满（不想让它被苦力怕一炸就没）、noLootTable（流体不该掉落任何东西）。
+     * 真正决定"流多远"的是 {@link com.hjz.magicinduction.common.ModFluids} 里的
+     * slopeFindDistance / levelDecreasePerBlock，不是这里。
+     */
+    public static final RegistryObject<LiquidBlock> MANA_ESSENCE_BLOCK = BLOCKS.register("mana_essence",
+            () -> new LiquidBlock(ModFluids.MANA_ESSENCE,
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_PURPLE)
+                            .replaceable()
+                            .noCollission()
+                            .strength(100.0F)
+                            .pushReaction(PushReaction.DESTROY)
+                            .noLootTable()
+                            .liquid()
+                            .sound(SoundType.EMPTY)));
 
     public static void register(IEventBus bus) {
         BLOCKS.register(bus);

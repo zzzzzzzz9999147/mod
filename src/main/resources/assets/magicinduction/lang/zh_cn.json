@@ -8,6 +8,9 @@
   "block.magicinduction.magic_leaves": "魔法树叶",
   "block.magicinduction.magic_sapling": "魔法树苗",
 
+  "item.magicinduction.mana_essence_bucket": "魔法原液桶",
+  "block.magicinduction.mana_essence": "魔法原液",
+  "fluid_type.magicinduction.mana_essence": "魔法原液",
   "item.magicinduction.magic_crystal": "魔力结晶",
   "item.magicinduction.magic_stick": "魔法木棍",
   "item.magicinduction.magic_sword": "魔法剑",

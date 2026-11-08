@@ -8,6 +8,9 @@
   "block.magicinduction.magic_leaves": "Magic Leaves",
   "block.magicinduction.magic_sapling": "Magic Sapling",
 
+  "item.magicinduction.mana_essence_bucket": "Mana Essence Bucket",
+  "block.magicinduction.mana_essence": "Mana Essence",
+  "fluid_type.magicinduction.mana_essence": "Mana Essence",
   "item.magicinduction.magic_crystal": "Magic Crystal",
   "item.magicinduction.magic_stick": "Magic Stick",
   "item.magicinduction.magic_sword": "Magic Sword",

@@ -1,13 +1,16 @@
 package com.hjz.magicinduction;
 
 import com.hjz.magicinduction.common.ButterflyJarItem;
+import com.hjz.magicinduction.common.ModFluids;
 import net.minecraft.world.item.AxeItem;
+import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Tiers;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -92,6 +95,23 @@ public class ModItems {
      */
     public static final RegistryObject<Item> MANA_BUTTERFLY_SPAWN_EGG = ITEMS.register("mana_butterfly_spawn_egg",
             () -> new ForgeSpawnEggItem(ModEntities.MANA_BUTTERFLY, 0x6A3EA8, 0xD8B0FF, new Item.Properties()));
+
+    /**
+     * 魔法原液桶。
+     *
+     * <p>purpose: 让原液能被取出、搬运、倒进 Create 的储罐或工作盆。
+     *
+     * <p>design note: 直接用原版 {@link BucketItem}，不自己实现 IFluidHandlerItem——
+     * 1.20.1 的 BucketItem 已经通过 Forge 的 Capability 提供了流体容器能力，
+     * Create 的桶交互（工作盆、储罐、灌注）走的就是这条通用路径。
+     * 自己造一个只会多出一堆边界情况（比如堆叠时的 NBT 同步）。
+     *
+     * <p>edge cases: craftRemainder(BUCKET) 保证倒完还你一个空桶；
+     * stacksTo(1) 是必须的，桶是带流体状态的物品，堆叠会让 NBT 互相污染。
+     */
+    public static final RegistryObject<Item> MANA_ESSENCE_BUCKET = ITEMS.register("mana_essence_bucket",
+            () -> new BucketItem(ModFluids.MANA_ESSENCE,
+                    new Item.Properties().stacksTo(1).craftRemainder(Items.BUCKET)));
 
     public static void register(IEventBus bus) {
         ITEMS.register(bus);

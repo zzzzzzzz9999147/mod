@@ -1,0 +1,28 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:mod_loaded",
+          "modid": "create"
+        }
+      ],
+      "recipe": {
+        "type": "create:mixing",
+        "heatRequirement": "heated",
+        "ingredients": [
+          {
+            "item": "magicinduction:magic_crystal"
+          }
+        ],
+        "results": [
+          {
+            "amount": 250,
+            "fluid": "magicinduction:mana_essence"
+          }
+        ]
+      }
+    }
+  ]
+}
