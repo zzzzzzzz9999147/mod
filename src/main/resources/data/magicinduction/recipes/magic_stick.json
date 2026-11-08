@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "P",
+    "P"
+  ],
+  "key": {
+    "P": {
+      "item": "magicinduction:magic_planks"
+    }
+  },
+  "result": {
+    "item": "magicinduction:magic_stick",
+    "count": 4
+  }
+}

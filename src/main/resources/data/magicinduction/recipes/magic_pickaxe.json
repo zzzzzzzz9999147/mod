@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PPP",
+    " S ",
+    " S "
+  ],
+  "key": {
+    "P": {
+      "item": "magicinduction:magic_planks"
+    },
+    "S": {
+      "item": "magicinduction:magic_stick"
+    }
+  },
+  "result": {
+    "item": "magicinduction:magic_pickaxe"
+  }
+}

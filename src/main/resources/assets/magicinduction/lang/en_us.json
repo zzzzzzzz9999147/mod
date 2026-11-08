@@ -1,0 +1,83 @@
+{
+  "itemGroup.magicinduction": "Magic Induction",
+
+  "block.magicinduction.magic_ore": "Basic Magic Ore",
+  "block.magicinduction.mana_inducer": "Mana Inducer",
+  "block.magicinduction.magic_log": "Magic Log",
+  "block.magicinduction.magic_planks": "Magic Planks",
+  "block.magicinduction.magic_leaves": "Magic Leaves",
+  "block.magicinduction.magic_sapling": "Magic Sapling",
+
+  "item.magicinduction.magic_crystal": "Magic Crystal",
+  "item.magicinduction.magic_stick": "Magic Stick",
+  "item.magicinduction.magic_sword": "Magic Sword",
+  "item.magicinduction.magic_pickaxe": "Magic Pickaxe",
+  "item.magicinduction.magic_axe": "Magic Axe",
+  "item.magicinduction.magic_shovel": "Magic Shovel",
+  "item.magicinduction.magic_hoe": "Magic Hoe",
+  "item.magicinduction.mana_dust": "Mana Dust",
+  "item.magicinduction.butterfly_jar": "Butterfly Jar",
+  "item.magicinduction.mana_butterfly_spawn_egg": "Mana Butterfly Spawn Egg",
+
+  "entity.magicinduction.mana_butterfly": "Mana Butterfly",
+
+  "tooltip.magicinduction.jar_count": "Butterflies: %1$s / %2$s",
+  "tooltip.magicinduction.jar_empty_hint": "Right-click a Mana Butterfly to capture it",
+  "tooltip.magicinduction.jar_install_hint": "Right-click a Mana Inducer to install it",
+  "tooltip.magicinduction.jar_full_hint": "Full - install it on a Mana Inducer",
+
+  "message.magicinduction.jar_full": "This jar is already full (%s/5)",
+  "message.magicinduction.empty_jar": "This jar has no butterflies yet",
+  "message.magicinduction.status_idle": "Idle - install a jar with butterflies",
+  "message.magicinduction.status_no_dust": "Out of Mana Dust - %s butterflies are waiting",
+  "message.magicinduction.status_no_input": "No cobblestone - place one on each of the four sides",
+  "message.magicinduction.status_running": "Running - %1$s/%2$s butterflies, %3$s dust, %4$s blocks converted",
+
+  "ponder.magicinduction.title": "Ponder",
+  "ponder.magicinduction.hint": "Hold [W] to ponder",
+  "ponder.magicinduction.hint_pages": "<- -> page  |  ESC close",
+  "ponder.magicinduction.hint_close": "ESC close",
+  "ponder.magicinduction.empty": "No notes for this item yet",
+
+  "ponder.magicinduction.mana_butterfly_spawn_egg.p1.t": "What it is for",
+  "ponder.magicinduction.mana_butterfly_spawn_egg.p1.b": "Creative mode only. Right-click to spawn one Mana Butterfly. Wild butterflies need a dark cave, light level below 8, and cobblestone within 8 blocks - this lets you skip the search and test jar capture and induction right away.",
+
+  "ponder.magicinduction.butterfly_jar.p1.t": "A jar of butterflies",
+  "ponder.magicinduction.butterfly_jar.p1.b": "Turns one lucky encounter into a portable asset. Holds up to 5 Mana Butterflies. A full jar glows with enchantment shine and refuses to take more.",
+
+  "ponder.magicinduction.butterfly_jar.p2.t": "Filling it",
+  "ponder.magicinduction.butterfly_jar.p2.b": "Hold the jar and right-click a Mana Butterfly. Butterflies spawn rarely: underground, light level below 8, and cobblestone within 8 blocks. If a patch of cobblestone has quietly turned into glowing violet ore, one is nearby.",
+
+  "ponder.magicinduction.butterfly_jar.p3.t": "Using it",
+  "ponder.magicinduction.butterfly_jar.p3.b": "Right-click a Mana Inducer to install the jar. The machine converts cobblestone touching its north, south, east and west sides. More butterflies means faster conversion - five butterflies is about one block per second, so four sides empty in seconds. Keep feeding it.",
+
+  "ponder.magicinduction.mana_inducer.p1.t": "What it does",
+  "ponder.magicinduction.mana_inducer.p1.b": "Turns bottled butterflies into a converter. It never creates ore from nothing - it only replaces the cobblestone touching its four sides with Basic Magic Ore, one block at a time. All four sides look the same, so its facing makes no difference.",
+
+  "ponder.magicinduction.mana_inducer.p2.t": "Starting it",
+  "ponder.magicinduction.mana_inducer.p2.b": "1) Right-click with a jar full of butterflies. 2) Right-click with Mana Dust. 3) Place cobblestone on all four sides, touching the machine. Each block lights up and turns to ore - remember to refill the empty side. The four side lamps light clockwise, one per butterfly; with five, the central ring glows too.",
+
+  "ponder.magicinduction.mana_inducer.p3.t": "The loop",
+  "ponder.magicinduction.mana_inducer.p3.b": "Each converted block costs 1 Mana Dust, and each ore block drops exactly 1 Crystal plus 1 Dust - so dust breaks even. The only thing you really have to supply is cobblestone: a cobblestone generator feeding this machine gives you a steady supply of Magic Crystals.",
+
+  "ponder.magicinduction.magic_ore.p1.t": "Drops",
+  "ponder.magicinduction.magic_ore.p1.b": "Requires an iron pickaxe or better. Drops 1 Magic Crystal and 3 experience, with a chance of Mana Dust.",
+
+  "ponder.magicinduction.magic_ore.p2.t": "Where it comes from",
+  "ponder.magicinduction.magic_ore.p2.b": "It never generates naturally. It appears only where a wild butterfly converted cobblestone, or where a Mana Inducer converted a region in bulk.",
+
+  "ponder.magicinduction.mana_dust.p1.t": "What it does",
+  "ponder.magicinduction.mana_dust.p1.b": "Fuel for the Mana Inducer. Every converted block consumes 1 dust. Without dust the machine stops and tells you why.",
+
+  "ponder.magicinduction.mana_dust.p2.t": "Where it comes from",
+  "ponder.magicinduction.mana_dust.p2.b": "Dropped by Basic Magic Ore. Since 1 dust converts 1 block and 1 block yields 1 dust, the ledger balances: you can convert exactly as much as you mined.",
+
+  "ponder.magicinduction.magic_crystal.p1.t": "What it does",
+  "ponder.magicinduction.magic_crystal.p1.b": "The core material for crafting a Mana Inducer. It also feeds butterflies: two butterflies plus 2 crystals will breed.",
+
+  "ponder.magicinduction.magic_crystal.p2.t": "Where it comes from",
+  "ponder.magicinduction.magic_crystal.p2.b": "Dropped by Basic Magic Ore.",
+
+  "ponder.magicinduction.magic_planks.p1.t": "A wood type, complete",
+  "ponder.magicinduction.magic_planks.p1.b": "Magic Planks are part of the vanilla planks tag, so vanilla recipes - chests, crafting tables, bookshelves, torches, bowls - accept them as-is. Stack two planks vertically for a Magic Stick, then pair planks with sticks to make a sword, pickaxe, axe, shovel and hoe. Durability and mining speed match vanilla wooden tools exactly; only the colour is different. They also burn in a furnace for 15 seconds each."
+}

@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#magicinduction:has_magic_tree",
+  "features": "magicinduction:magic_tree_placed",
+  "step": "vegetal_decoration"
+}

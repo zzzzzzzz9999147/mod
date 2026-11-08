@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "magicinduction:block/magic_leaves"
+  }
+}

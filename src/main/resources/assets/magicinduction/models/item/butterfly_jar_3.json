@@ -1,0 +1,6 @@
+{
+  "parent": "magicinduction:item/butterfly_jar_base",
+  "textures": {
+    "contents": "magicinduction:item/jar_contents_3"
+  }
+}

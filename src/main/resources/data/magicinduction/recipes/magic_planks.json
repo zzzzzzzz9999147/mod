@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "magicinduction:magic_log"
+    }
+  ],
+  "result": {
+    "item": "magicinduction:magic_planks",
+    "count": 4
+  }
+}

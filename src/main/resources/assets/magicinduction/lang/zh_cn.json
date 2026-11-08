@@ -1,0 +1,83 @@
+{
+  "itemGroup.magicinduction": "魔力诱导",
+
+  "block.magicinduction.magic_ore": "基础魔力矿",
+  "block.magicinduction.mana_inducer": "魔力诱导机器",
+  "block.magicinduction.magic_log": "魔法原木",
+  "block.magicinduction.magic_planks": "魔法木板",
+  "block.magicinduction.magic_leaves": "魔法树叶",
+  "block.magicinduction.magic_sapling": "魔法树苗",
+
+  "item.magicinduction.magic_crystal": "魔力结晶",
+  "item.magicinduction.magic_stick": "魔法木棍",
+  "item.magicinduction.magic_sword": "魔法剑",
+  "item.magicinduction.magic_pickaxe": "魔法镐",
+  "item.magicinduction.magic_axe": "魔法斧",
+  "item.magicinduction.magic_shovel": "魔法锹",
+  "item.magicinduction.magic_hoe": "魔法锄",
+  "item.magicinduction.mana_dust": "魔力粉尘",
+  "item.magicinduction.butterfly_jar": "蝴蝶玻璃罐",
+  "item.magicinduction.mana_butterfly_spawn_egg": "魔力蝴蝶刷怪蛋",
+
+  "entity.magicinduction.mana_butterfly": "魔力蝴蝶",
+
+  "tooltip.magicinduction.jar_count": "蝴蝶：%1$s / %2$s 只",
+  "tooltip.magicinduction.jar_empty_hint": "右键魔力蝴蝶可将其捕获",
+  "tooltip.magicinduction.jar_install_hint": "右键魔力诱导机器可将其装入",
+  "tooltip.magicinduction.jar_full_hint": "已装满，装到魔力诱导机器上",
+
+  "message.magicinduction.jar_full": "这个罐子已经装满了（5/5）",
+  "message.magicinduction.empty_jar": "这个罐子里还没有蝴蝶",
+  "message.magicinduction.status_idle": "闲置中 — 请放入装有蝴蝶的玻璃罐",
+  "message.magicinduction.status_no_dust": "缺少魔力粉尘 — %s 只蝴蝶正在等待",
+  "message.magicinduction.status_no_input": "缺少圆石 — 请在机器四个侧面各放一块圆石",
+  "message.magicinduction.status_running": "运转中 — 蝴蝶 %1$s/%2$s 只，粉尘 %3$s 个，已转化 %4$s 块",
+
+  "ponder.magicinduction.title": "思考",
+  "ponder.magicinduction.hint": "按住 [W] 查看用途",
+  "ponder.magicinduction.hint_pages": "← → 翻页　·　ESC 关闭",
+  "ponder.magicinduction.hint_close": "ESC 关闭",
+  "ponder.magicinduction.empty": "这件物品还没有说明",
+
+  "ponder.magicinduction.mana_butterfly_spawn_egg.p1.t": "用途",
+  "ponder.magicinduction.mana_butterfly_spawn_egg.p1.b": "创造模式专用。右键生成一只魔力蝴蝶。野生蝴蝶的生成条件很苛刻——地下、光照低于 8、附近 8 格内有圆石，用这个可以跳过寻找，直接测试罐子捕获和机器转化。",
+
+  "ponder.magicinduction.butterfly_jar.p1.t": "这是什么",
+  "ponder.magicinduction.butterfly_jar.p1.b": "把一次偶遇变成一份可携带的资产。罐子最多装 5 只魔力蝴蝶，装满后带附魔光效，并且不能再往里捕获。",
+
+  "ponder.magicinduction.butterfly_jar.p2.t": "怎么装满",
+  "ponder.magicinduction.butterfly_jar.p2.b": "手持罐子右键魔力蝴蝶。蝴蝶是稀有生成的，只在地下、光照低于 8、且附近 8 格内有圆石的地方出现。如果你看到某处圆石自己变成了发紫光的矿，说明附近就有一只。",
+
+  "ponder.magicinduction.butterfly_jar.p3.t": "装满之后",
+  "ponder.magicinduction.butterfly_jar.p3.b": "右键魔力诱导机器把它装上去。机器会把紧贴它东、南、西、北四个侧面的圆石逐块转成矿。罐里蝴蝶越多转得越快——5 只大约每秒 1 块，四个面十几秒就吃空了，记得补料。",
+
+  "ponder.magicinduction.mana_inducer.p1.t": "这是什么",
+  "ponder.magicinduction.mana_inducer.p1.b": "把罐里的蝴蝶变成一台转化器。它不会凭空造出矿物，只把紧贴它左右前后四个面的圆石逐块替换成基础魔力矿。四个面长得完全一样，摆哪个方向都一样用。",
+
+  "ponder.magicinduction.mana_inducer.p2.t": "怎么开机",
+  "ponder.magicinduction.mana_inducer.p2.b": "① 用装满蝴蝶的玻璃罐右键装罐 ② 用魔力粉尘右键喂料 ③ 在机器东、南、西、北紧贴它的四个面各放一块圆石。圆石会一块块亮起来变成矿，挖走之后记得补新的。侧面四盏小灯按顺时针依次点亮，一只一盏；装到 5 只时中间那个圆环会一起亮起来。",
+
+  "ponder.magicinduction.mana_inducer.p3.t": "资源循环",
+  "ponder.magicinduction.mana_inducer.p3.b": "每转化 1 块消耗 1 个魔力粉尘，而每块矿挖出来正好是 1 个结晶加 1 个粉尘——粉尘收支刚好持平。所以真正要你持续供给的只有圆石：一台刷石机加上这台机器，就能稳定产出魔力结晶。",
+
+  "ponder.magicinduction.magic_ore.p1.t": "产出",
+  "ponder.magicinduction.magic_ore.p1.b": "需要铁镐及以上才能挖。挖掉得到 1 个魔力结晶和 3 点经验，另有几率掉落魔力粉尘。",
+
+  "ponder.magicinduction.magic_ore.p2.t": "从哪来",
+  "ponder.magicinduction.magic_ore.p2.b": "它不会自然生成。只有两种来源：野生蝴蝶随机转化了圆石，或者魔力诱导机器把紧贴它四个侧面的圆石转成了矿。",
+
+  "ponder.magicinduction.mana_dust.p1.t": "用途",
+  "ponder.magicinduction.mana_dust.p1.b": "魔力诱导机器的燃料。每转化 1 块圆石消耗 1 个。没有粉尘，机器会停下并提示你缺料。",
+
+  "ponder.magicinduction.mana_dust.p2.t": "从哪来",
+  "ponder.magicinduction.mana_dust.p2.b": "挖掘基础魔力矿掉落。1 个粉尘转化 1 块圆石，1 块矿又产出 1 个粉尘，收支刚好持平——粉尘不会越用越少，真正被消耗掉的是圆石。",
+
+  "ponder.magicinduction.magic_crystal.p1.t": "用途",
+  "ponder.magicinduction.magic_crystal.p1.b": "合成魔力诱导机器的核心材料。也可以用来喂蝴蝶：两只蝴蝶加 2 个结晶可以繁殖。",
+
+  "ponder.magicinduction.magic_crystal.p2.t": "从哪来",
+  "ponder.magicinduction.magic_crystal.p2.b": "挖掘基础魔力矿掉落。",
+
+  "ponder.magicinduction.magic_planks.p1.t": "一种完整的木头",
+  "ponder.magicinduction.magic_planks.p1.b": "魔法木板挂在原版木板标签里，所以箱子、工作台、书柜、火把、碗这些原版配方直接就能用它，不用额外加配方。两个木板竖着叠出魔法木棍，再用木棍配木板做出剑、镐、斧、锹、锄——耐久和挖掘速度和原版木制工具完全一样，只是换了一身紫色。丢进熔炉也能当燃料，一块烧 15 秒。"
+}

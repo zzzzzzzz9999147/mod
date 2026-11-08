@@ -1,0 +1,94 @@
+{
+  "variants": {
+    "facing=north,butterflies=0": {
+      "model": "magicinduction:block/mana_inducer"
+    },
+    "facing=north,butterflies=1": {
+      "model": "magicinduction:block/mana_inducer_1"
+    },
+    "facing=north,butterflies=2": {
+      "model": "magicinduction:block/mana_inducer_2"
+    },
+    "facing=north,butterflies=3": {
+      "model": "magicinduction:block/mana_inducer_3"
+    },
+    "facing=north,butterflies=4": {
+      "model": "magicinduction:block/mana_inducer_4"
+    },
+    "facing=north,butterflies=5": {
+      "model": "magicinduction:block/mana_inducer_5"
+    },
+    "facing=east,butterflies=0": {
+      "model": "magicinduction:block/mana_inducer",
+      "y": 90
+    },
+    "facing=east,butterflies=1": {
+      "model": "magicinduction:block/mana_inducer_1",
+      "y": 90
+    },
+    "facing=east,butterflies=2": {
+      "model": "magicinduction:block/mana_inducer_2",
+      "y": 90
+    },
+    "facing=east,butterflies=3": {
+      "model": "magicinduction:block/mana_inducer_3",
+      "y": 90
+    },
+    "facing=east,butterflies=4": {
+      "model": "magicinduction:block/mana_inducer_4",
+      "y": 90
+    },
+    "facing=east,butterflies=5": {
+      "model": "magicinduction:block/mana_inducer_5",
+      "y": 90
+    },
+    "facing=south,butterflies=0": {
+      "model": "magicinduction:block/mana_inducer",
+      "y": 180
+    },
+    "facing=south,butterflies=1": {
+      "model": "magicinduction:block/mana_inducer_1",
+      "y": 180
+    },
+    "facing=south,butterflies=2": {
+      "model": "magicinduction:block/mana_inducer_2",
+      "y": 180
+    },
+    "facing=south,butterflies=3": {
+      "model": "magicinduction:block/mana_inducer_3",
+      "y": 180
+    },
+    "facing=south,butterflies=4": {
+      "model": "magicinduction:block/mana_inducer_4",
+      "y": 180
+    },
+    "facing=south,butterflies=5": {
+      "model": "magicinduction:block/mana_inducer_5",
+      "y": 180
+    },
+    "facing=west,butterflies=0": {
+      "model": "magicinduction:block/mana_inducer",
+      "y": 270
+    },
+    "facing=west,butterflies=1": {
+      "model": "magicinduction:block/mana_inducer_1",
+      "y": 270
+    },
+    "facing=west,butterflies=2": {
+      "model": "magicinduction:block/mana_inducer_2",
+      "y": 270
+    },
+    "facing=west,butterflies=3": {
+      "model": "magicinduction:block/mana_inducer_3",
+      "y": 270
+    },
+    "facing=west,butterflies=4": {
+      "model": "magicinduction:block/mana_inducer_4",
+      "y": 270
+    },
+    "facing=west,butterflies=5": {
+      "model": "magicinduction:block/mana_inducer_5",
+      "y": 270
+    }
+  }
+}

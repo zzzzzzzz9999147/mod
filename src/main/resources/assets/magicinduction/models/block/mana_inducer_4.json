@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "magicinduction:block/mana_inducer_top",
+    "bottom": "magicinduction:block/mana_inducer_top",
+    "side": "magicinduction:block/mana_inducer_side_4"
+  }
+}

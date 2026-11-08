@@ -1,0 +1,36 @@
+# Gradle
+.gradle/
+build/
+out/
+run/
+run-data/
+mcmodsrepo/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+bin/
+eclipse/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local artifacts
+preview_sheet.png
+*.log
+
+# Local work notes / AI scratch
+.ai-memory/
+
+# 顶层预览图（生成物，可随时用 tools/ 重跑）
+/preview_*.png
+!/preview_model/
+/ref_*.png
