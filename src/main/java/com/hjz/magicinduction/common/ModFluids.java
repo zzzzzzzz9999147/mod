@@ -74,10 +74,13 @@ public final class ModFluids {
                             return FLOWING_TEXTURE;
                         }
 
-                        /** 偏亮的紫，让原液在远处也能一眼从水里分出来。 */
+                        /**
+                         * 白色 tint：贴图本身就是纯紫色，这里再染色只会让颜色相乘变暗。
+                         * 让贴图决定颜色，tint 只做"原样输出"，改色只需要换图，不用动代码。
+                         */
                         @Override
                         public int getTintColor() {
-                            return 0xFF9B6BE0;
+                            return 0xFFFFFFFF;
                         }
                     });
                 }
