@@ -94,6 +94,11 @@ tasks.named('jar', Jar).configure {
     finalizedBy 'reobfJar'
 }
 
+// mod 图标：mods.toml 的 logoFile="icon.png" 按 jar 根目录解析。
+// 图标源文件放 src/main/resources/icon.png —— processResources 会把它拷到 build/resources/main/，
+// jar 任务的 classpath 已包含该目录，所以会自动打到 jar 顶层，无需额外配置。
+// 唯一要注意：不能再用 from(...) 加第二次，否则 Gradle 8 会报 "Entry icon.png is a duplicate"。
+
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
