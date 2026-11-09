@@ -22,8 +22,9 @@ ROOT = Path(__file__).resolve().parent.parent
 BLOCK_DIR = ROOT / "src/main/resources/assets/magicinduction/textures/block"
 ITEM_DIR = ROOT / "src/main/resources/assets/magicinduction/textures/item"
 
-# 与蝴蝶贴图同一套紫：168,110,232 偏亮，这里取稍深的 155,107,224 作为液面基色
-PURPLE = (155, 107, 224)
+# 深紫：取蝴蝶翅膀暗部的色相，整体压到 88,48,145。
+# 之前的 155,107,224 在游戏里偏亮，看着像染料而不是"原液"。
+PURPLE = (88, 48, 145)
 PURPLE_ALPHA = 220  # 略微半透明，看得见底下的方块，但不是一片透明
 
 # 原版资源 jar（ForgeGradle 缓存）。不同环境路径可能不同，按顺序探测。
@@ -52,14 +53,21 @@ def make_fluid_textures() -> None:
     print("流体贴图：still / flow 均为纯紫色", PURPLE)
 
 
+# 原版水桶里最亮的水面像素，用来把亮部压到 PURPLE、暗部按比例跟随
+REF_WATER_VALUE = 0.90
+
+
 def blue_to_purple(rgb: tuple[int, int, int]) -> tuple[int, int, int]:
-    """把一个偏蓝的水像素转到紫色，保留原本的明暗层次。"""
+    """把一个偏蓝的水像素转到深紫，保留原本的明暗层次。
+
+    <p>不能只改色相：原版水面最亮处接近纯白蓝（v≈0.9），只换 hue 会让桶里的水
+    比液面亮一大截，两个紫色对不上。这里按"相对最亮水的比例"整体缩放到 PURPLE，
+    亮部正好落在 PURPLE 上，暗部自然更深。
+    """
     r, g, b = (c / 255.0 for c in rgb)
-    h, s, v = colorsys.rgb_to_hsv(r, g, b)
-    # 目标紫 H≈264°，S 按 PURPLE 的实际饱和度；V 保留原值，这样水面仍有亮部暗部
-    target_s = (PURPLE[2] - PURPLE[1]) / PURPLE[2]
-    r2, g2, b2 = colorsys.hsv_to_rgb(0.735, target_s, v)
-    return int(r2 * 255), int(g2 * 255), int(b2 * 255)
+    _, _, v = colorsys.rgb_to_hsv(r, g, b)
+    k = v / REF_WATER_VALUE
+    return tuple(min(255, max(0, int(c * k))) for c in PURPLE)
 
 
 def make_bucket_texture() -> None:
