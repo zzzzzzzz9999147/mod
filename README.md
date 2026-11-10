@@ -270,6 +270,8 @@ magic-induction/
 ├── tools/
 │   ├── release.py            # 升版本 → build → 出 dist 的 jar 与 zip
 │   ├── gen_fluid_assets.py   # 原液液面 / 流动 / 桶贴图
+│   ├── gen_purple_flame.py   # 从原版 fire_0/fire_1 生成紫色 32 帧火焰
+│   ├── gen_cake_asset.py     # 魔法蛋糕物品贴图
 │   ├── gen_mod_icon.py       # 从蝴蝶贴图拼 256×256 图标
 │   ├── gen_textures.py       # 16×16 方块与物品贴图
 │   ├── gen_item_models.py    # 3D 罐子 base + 5 档变体
@@ -289,16 +291,24 @@ magic-induction/
     │   │   ├── ManaInducerBlockEntity.java  # 转化循环 + 按面输入
     │   │   ├── MagicLeavesBlock.java        # 粒子
     │   │   ├── MagicTreeGrower.java         # 树苗生长
+    │   │   ├── MagicCakeItem.java           # 魔法蛋糕（只喂炉子，不给玩家吃）
     │   │   └── WoodFuels.java               # 燃料值
+    │   ├── compat/                          # 只在装了 Create 时加载
+    │   │   ├── MagicCakeEvents.java         # 右键燃烧室 → 打标记 / 喂燃料
+    │   │   ├── MagicFlameClient.java        # 换掉燃烧室 BE 渲染器
+    │   │   └── PurpleFlameVisuals.java      # 包一层 Flywheel visualizer 逐实例让位
     │   └── client/
     │       ├── ClientSetup.java             # 渲染器 / 模型层 / ItemProperties
     │       ├── ManaButterflyModel.java
     │       ├── ManaButterflyRenderer.java
     │       ├── ClientForgeEvents.java       # 悬停记录 + W 键触发
     │       ├── PonderEntries.java           # 物品 → 页面映射
-    │       └── PonderScreen.java            # 分页图文界面
+    │       ├── PonderScreen.java            # 分页图文界面
+    │       ├── PurpleBlazeBurnerRenderer.java # 吃过蛋糕的燃烧室：换紫色火焰
+    │       └── PurpleFlameRenderer.java     # 原版火苗几何（十字面片 + 32 帧）
     └── resources/
         ├── assets/magicinduction/           # 模型、方块状态、语言、纹理
+        │   └── atlases/blocks.json          # 把 magic_flame_* 显式加进方块图集
         ├── data/magicinduction/             # 配方、战利品、标签、世界生成
         └── icon.png                         # mod 图标（jar 根目录）
 ```
@@ -314,3 +324,4 @@ magic-induction/
 5. 圆石进料缓冲槽（自动补料）
 6. 罐内蝴蝶寿命衰减
 7. 发布到 Modrinth / CurseForge（PCL 的图标只认这两个平台的封面）
+8. 紫色火焰在真实 Create 环境里跑一次，确认「吃过蛋糕的炉子掉回 BE 渲染路径」生效
