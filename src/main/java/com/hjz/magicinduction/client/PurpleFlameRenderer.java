@@ -24,8 +24,8 @@ import org.joml.Matrix4f;
  * 四面各贴一张单帧 16×16 的图，火苗轮廓是个梯形色块。
  * 换色调之后玩家看到的仍然是「一个被染紫的方柱」——像贴图被 PS 调了色相。
  *
- * <p>这里改成原版 {@code fire_0}/{@code fire_1} 的做法：两层互相垂直的竖直面片，
- * 贴图是 32 帧的动画长条，火苗顶部三簇尖角会独立跳动。
+ * <p>这里改成原版 {@code fire_0}/{@code fire_1} 的做法：两层竖直面片，每层十字交叉，
+ * 两层之间错开 22.5°，贴图是 32 帧的动画长条，火苗顶部三簇尖角会独立跳动。
  *
  * <h2>贴图不做成 mcmeta 动画</h2>
  * 有意让 {@code magic_flame_*.png} 保持为一张 16×512 的<b>静态</b>长条，
@@ -208,8 +208,11 @@ public final class PurpleFlameRenderer {
     /**
      * 从方块图集里取 sprite。
      *
-     * <p>贴图必须先经 {@code TextureStitchEvent.Post} 登记才会进图集，
-     * 登记在 {@link MagicFlameClient#onStitch} 里做。
+     * <p>贴图要先被图集收录。1.20.1 的 Forge <b>没有</b> {@code TextureStitchEvent.Pre}，
+     * 所以不能靠事件登记，而是在
+     * {@code assets/magicinduction/atlases/blocks.json} 里用
+     * {@code minecraft:single} 显式声明——漏了这一步的表现是火焰完全不画，
+     * 日志只有一行 Missing sprite，不报错也不崩。
      */
     private static TextureAtlasSprite spriteFor(ResourceLocation loc) {
         return Minecraft.getInstance()
