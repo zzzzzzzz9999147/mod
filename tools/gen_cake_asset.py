@@ -3,109 +3,118 @@
 用法：
     python3 tools/gen_cake_asset.py
 
-设计取向
+做法
+----
+**直接取 Create 烈焰蛋糕 `create:item/blaze_cake` 的像素图，把色相换成紫色。**
+形状、层次、高光位置、纸托纹理、轮廓台阶 —— 全部原样保留，
+只有颜色的"色相"变了，亮度和饱和度逐像素不动。
+
+之所以这么做：
+- 魔法蛋糕的玩法就是"烈焰蛋糕注了魔法原液"，剪影必须和烈焰蛋糕**完全一致**，
+  玩家在物品栏里一眼就能看出是同一样东西换了色；
+- 手画 16×16 很难在 11 个色阶上复刻出这种"顶面高光成簇、底沿压暗"的层次，
+  换色反而更忠实。
+
+依赖 Create 的 jar
+------------------
+本脚本从 `mods-external/create-1.20.1-6.0.8.jar` 里读 blaze_cake，
+**只在生成贴图时用一次**，产物是独立的 png，运行时不需要 Create。
+
+找不到 jar 时会跳过生成并打印提示 —— 已经生成的 `magic_cake.png` 留在仓库里，
+不影响构建。换 Create 版本后重跑一次即可。
+
+色相映射
 --------
-玩家已经认识 Create 的**烈焰蛋糕**（`create:item/blaze_cake`）：一张
-"俯视的圆饼、边缘一圈纸托、顶面有淋面高光、底沿一圈更暗的焦底"的图标。
-魔法蛋糕是"同一个蛋糕注了魔法原液"，所以必须**沿用同一套构图和明暗结构**，
-只把色相从橙金换成紫——这样放在物品栏里并排时，一眼就能认出关系。
-
-具体沿用（对照 blaze_cake 的 16×16 像素表，逐行对齐）：
-
-| 层 | Create 的橙金 | 本 mod 的紫 | 作用 |
-|---|---|---|---|
-| 外描边 | `#CC4628` | `#7B3ECE` | 勾出剪影，全图**最饱和**的一圈 |
-| 顶面斜坡 | `#D67824` | `#6436AA` | 顶面外沿，比描边暗一档形成倒角 |
-| 顶面主体 | `#ECC543` | `#844EC8` | 顶面 |
-| 顶面受光 | `#FFE385` | `#9E6ADC` | 顶面偏上一侧 |
-| 高光点 | 成簇 `#FFE385` | `#D6B4FA` | 顶部两三格亮点，模拟油光 |
-| 饼身 | `#EF8D36` → `#D67824` | `#58348C` → `#442278` | 正对镜头那一圈 |
-| 焦底 | `#854242` | `#602C9C` | 饼身与纸托之间 |
-| 纸托 | `#723232` `#501B1B` `#411616` | `#4A2279` `#32164E` `#26103A` | 最下两三行，压暗让饼"坐得住" |
-
-**为什么不直接给 blaze_cake.png 调色相**：那是 Create（MIT）的美术资源，
-逐像素搬运再改色属于衍生复制。这里按同样的构图自己画一张 —— 形状与结构一致、
-像素独立，既有辨识度也不越界。
-
-**为什么纯手写 16×16 矩阵**：这个尺寸下每个像素都是一个设计决策，
-算法缩图/羽化只会得到糊掉的一团。矩阵改一行就能看效果，比调参快。
-而且只写左半边、右半边镜像 —— 圆饼左右对称，写一半既少出错，也保证不歪。
-
-色相统一取原液 `PURPLE = (88,48,145)` 一带，
-和流体、火焰、桶保持同一个紫。
+原图是橙金（色相 11°–46°）+ 一圈暗红纸托（色相 0°），共 11 色。
+按亮度从暗到亮依次映射到紫（色相 253°–274°），形成从深紫到浅紫的顺色阶，
+和原液的 `PURPLE = (88,48,145)` 同一色系。
 """
 
 from __future__ import annotations
 
+import colorsys
+import io
+import sys
+import zipfile
 from pathlib import Path
 
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 ITEM_DIR = ROOT / "src/main/resources/assets/magicinduction/textures/item"
+OUT = ITEM_DIR / "magic_cake.png"
 
-# 调色板。键名按"层"取，方便和 blaze_cake 的像素表逐行对照。
-PALETTE = {
-    ".": (0, 0, 0, 0),            # 透明
-    # 描边是全图**最饱和**的一圈：橙金版靠亮橙红 #CC4628 把形状"撑"起来，
-    # 换成紫色如果直接用最暗的紫，整张图会塌成一块色饼。
-    "o": (123, 62, 206, 255),     # 外描边
-    "s": (100, 54, 170, 255),     # 顶面斜坡（比描边暗一档，形成倒角）
-    "S": (132, 78, 200, 255),     # 顶面主体
-    "l": (158, 106, 220, 255),    # 顶面受光
-    "L": (214, 180, 250, 255),    # 顶面高光点
-    "n": (88, 46, 152, 255),      # 饼身
-    "m": (68, 34, 120, 255),      # 饼身暗部
-    "K": (96, 44, 156, 255),      # 焦底（对应 blaze_cake 的 #854242）
-    "j": (74, 34, 121, 255),      # 纸托（#723232）
-    "J": (50, 22, 78, 255),       # 纸托最暗（#501B1B）
-    "u": (38, 16, 58, 255),       # 底部阴影（#411616）
+# 候选 jar：先找工程里放依赖的目录，再退回 Gradle 缓存里的 modrinth 缓存。
+JAR_CANDIDATES = [
+    ROOT / "mods-external" / "create-1.20.1-6.0.8.jar",
+    Path("/workspace/mods-external/create-1.20.1-6.0.8.jar"),
+]
+SOURCE_ENTRY = "assets/create/textures/item/blaze_cake.png"
+
+# 原色 -> (目标色相, 注记)。亮度 L、饱和 S 一律沿用原像素。
+# 亮度顺序：暗红纸托 4 色 → 焦底 → 描边 → 饼身 → 顶面 → 高光。
+HUE_MAP = {
+    (0x41, 0x16, 0x16): (253, "纸托最暗"),
+    (0x50, 0x1B, 0x1B): (255, "纸托"),
+    (0x65, 0x28, 0x28): (258, "纸托受光"),
+    (0x72, 0x32, 0x32): (260, "饼身暗部"),
+    (0x85, 0x42, 0x42): (262, "焦底"),
+    (0xA2, 0x2E, 0x14): (264, "饼身暗红"),
+    (0xCC, 0x46, 0x28): (266, "外描边"),
+    (0xD6, 0x78, 0x24): (268, "顶面外沿"),
+    (0xEF, 0x8D, 0x36): (270, "饼身受光"),
+    (0xEC, 0xC5, 0x43): (272, "顶面主体"),
+    (0xFF, 0xE3, 0x85): (274, "顶面高光"),
 }
 
-# 左半边手写、右半边镜像 —— 16×16 的圆饼左右对称，
-# 写一半既少出错，也保证左右不歪（blaze_cake 本身也是左右对称的）。
-# 自上而下：2 行空气 → 顶面（受光在上、往下渐暗）→ 饼身 → 焦底 → 纸托 → 收口。
-_HALF = [
-    "........",
-    "........",
-    "....oooo",
-    "...oossl",
-    "..oosSSl",
-    "..osSSSl",
-    ".osSSSlL",
-    ".osSSllL",
-    ".ossSSSl",
-    ".oossSSS",
-    ".oonnSSS",
-    "..onnSss",
-    "..ojjJuu",
-    "...oJJJJ",
-    "....ooJJ",
-    "........",
-]
 
-SPRITE = [row + row[::-1] for row in _HALF]
+def find_source() -> Image.Image | None:
+    for jar in JAR_CANDIDATES:
+        if not jar.is_file():
+            continue
+        with zipfile.ZipFile(jar) as zf:
+            if SOURCE_ENTRY not in zf.namelist():
+                continue
+            with zf.open(SOURCE_ENTRY) as f:
+                return Image.open(io.BytesIO(f.read())).convert("RGBA")
+    return None
+
+
+def recolor(src: Image.Image) -> Image.Image:
+    w, h = src.size
+    out = Image.new("RGBA", (w, h))
+    sp, op = src.load(), out.load()
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = sp[x, y]
+            if a == 0:
+                op[x, y] = (0, 0, 0, 0)
+                continue
+            target = HUE_MAP.get((r, g, b))
+            if target is None:
+                raise SystemExit(f"烈焰蛋糕出现了未映射的颜色 #{r:02X}{g:02X}{b:02X} @ ({x},{y})，"
+                                 f"请把新颜色加进 HUE_MAP")
+            hue = target[0]
+            _, light, sat = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
+            nr, ng, nb = colorsys.hls_to_rgb(hue / 360.0, light, sat)
+            op[x, y] = (round(nr * 255), round(ng * 255), round(nb * 255), a)
+    return out
 
 
 def build() -> None:
-    if len(SPRITE) != 16 or any(len(row) != 16 for row in SPRITE):
-        bad = [(i, len(r), r) for i, r in enumerate(SPRITE) if len(r) != 16]
-        raise SystemExit(f"像素矩阵必须是 16×16，问题行：{bad}")
+    src = find_source()
+    if src is None:
+        print("找不到 Create 的 blaze_cake，跳过（已生成的 magic_cake.png 保留）")
+        sys.exit(0)
+    if src.size != (16, 16):
+        raise SystemExit(f"烈焰蛋糕贴图尺寸异常：{src.size}，预期 16×16")
 
-    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
-    px = img.load()
-    for y, row in enumerate(SPRITE):
-        for x, ch in enumerate(row):
-            if ch not in PALETTE:
-                raise SystemExit(f"未知颜色键 {ch!r} @ ({x},{y})")
-            px[x, y] = PALETTE[ch]
-
+    img = recolor(src)
     ITEM_DIR.mkdir(parents=True, exist_ok=True)
-    out = ITEM_DIR / "magic_cake.png"
-    img.save(out)
+    img.save(OUT)
 
-    used = sorted({c for row in SPRITE for c in row if c != "."})
-    print(f"魔法蛋糕贴图：16×16，{len(used)} 种颜色 -> {out}")
+    colors = {c[:3] for c in img.getcolors(65536) or [] if c[1][3] > 0}
+    print(f"魔法蛋糕贴图：16×16，{len(colors)} 种颜色（烈焰蛋糕换了色相）-> {OUT}")
 
 
 if __name__ == "__main__":
