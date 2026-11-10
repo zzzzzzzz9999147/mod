@@ -167,7 +167,11 @@ public class ManaButterfly extends Animal {
         this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Player.class, 5.0F, 1.4D, 1.4D,
                 living -> living instanceof Player player && player.isSprinting()));
         this.goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
-        this.goalSelector.addGoal(3, new TemptGoal(this, 1.25D, Ingredient.of(ModItems.MAGIC_CRYSTAL.get()), false));
+        // 吸引用的食物有两样：魔力结晶（繁殖 + 引诱）和魔法蛋糕（只引诱、不解饱）。
+        // 蛋糕更贵，玩家会先拿结晶，但蛋糕这条路必须认——否则手持蛋糕时蝴蝶毫无反应，
+        // 玩家会以为"这个蛋糕没用"。
+        this.goalSelector.addGoal(3, new TemptGoal(this, 1.25D,
+                Ingredient.of(ModItems.MAGIC_CRYSTAL.get(), ModItems.MAGIC_CAKE.get()), false));
         this.goalSelector.addGoal(4, new FollowParentGoal(this, 1.1D));
         // 蜜蜂式飞行：不停地从一个点飘到下一个点，永远不主动落地。
         // 这里刻意没有"落地停驻"目标——蝴蝶停在地上就不像蝴蝶了。
@@ -208,6 +212,59 @@ public class ManaButterfly extends Animal {
     }
 
     /**
+     * 魔法蛋糕能不能吃、会不会进繁殖状态。
+     *
+     * <p>1.20.1 的 {@code Animal.mobInteract} 里写死了一条判断：
+     * <pre>
+     *   if (isFood(stack) &amp;&amp; getAge() == 0 &amp;&amp; !isInLove()) { setInLove(...) ... }
+     *   else if (isFood(stack) &amp;&amp; isBaby()) { growUp(...) }
+     * </pre>
+     * 也就是说——<b>不在 isFood 里，喂了也不会有任何反应</b>。而 isFood 同时被
+     * {@link BreedGoal} 用来判断"对方是不是带着食物"，所以把它写宽了，结晶那份
+     * "唯一繁殖食物"的设计就没了。
+     *
+     * <p>这里不改 isFood，改成先堵住父类的那条分支，再自己走一遍同样的流程。
+     * 好处是蛋糕的行为完全由这一处定义，不依赖父类内部实现顺序；坏处是父类
+     * 若在 1.20.1 之后改了这个方法，这段就得跟着改——所以版本范围锁死在 [1.20.1,1.21)。
+     *
+     * @return 空栈表示没吃东西，返回的栈会写回玩家手上
+     */
+    private InteractionResult tryEatMagicCake(Player player, InteractionHand hand, ItemStack stack) {
+        if (!stack.is(ModItems.MAGIC_CAKE.get())) {
+            return null;
+        }
+        // 幼崽吃蛋糕会长大；成体只进"求爱"状态。两条都和原版喂食的手感一致。
+        if (this.isBaby()) {
+            this.ageUp((int) ((float) (-this.getAge() / 20) * 0.1F), true);
+        } else if (this.getAge() == 0 && !this.isInLove()) {
+            this.setInLove(player);
+        } else {
+            // 已经处在求爱状态：不再消耗物品，只给一条动作栏提示，
+            // 免得玩家以为"喂了没生效"而反复右键把蛋糕喂光。
+            if (!this.level().isClientSide) {
+                player.displayClientMessage(
+                        net.minecraft.network.chat.Component.translatable(
+                                "message.magicinduction.cake_already_in_love"), true);
+            }
+            return InteractionResult.CONSUME;
+        }
+
+        if (!this.level().isClientSide && !player.getAbilities().instabuild) {
+            stack.shrink(1);
+        }
+        // 蛋糕是"浇了原液"的东西，吃下去得有反馈：紫色粒子 + 紫水晶音效，
+        // 和结晶喂食区分开，玩家能听出"这次用的是贵的那个"。
+        if (this.level() instanceof ServerLevel server) {
+            server.sendParticles(ParticleTypes.WITCH,
+                    this.getX(), this.getY() + 0.3D, this.getZ(),
+                    10, 0.3D, 0.2D, 0.3D, 0.01D);
+            server.playSound(null, this.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME,
+                    net.minecraft.sounds.SoundSource.NEUTRAL, 0.7F, 1.2F);
+        }
+        return InteractionResult.sidedSuccess(this.level().isClientSide);
+    }
+
+    /**
      * 实体优先的交互入口。
      *
      * 为什么不只靠 Item.interactLivingEntity：1.20.1 的 Mob.interact 是 final，
@@ -219,6 +276,11 @@ public class ManaButterfly extends Animal {
         ItemStack stack = player.getItemInHand(hand);
         if (stack.getItem() instanceof ButterflyJarItem) {
             return ButterflyJarItem.capture(stack, player, this);
+        }
+        // 蛋糕必须先于 super 处理：父类的 isFood 只认结晶，蛋糕递给它会被原样退回。
+        InteractionResult cake = this.tryEatMagicCake(player, hand, stack);
+        if (cake != null) {
+            return cake;
         }
         return super.mobInteract(player, hand);
     }

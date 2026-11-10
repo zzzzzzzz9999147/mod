@@ -38,6 +38,10 @@ python3 tools/release.py --no-bump
 | 1.9.6 | 新增魔法原液流体（流体方块 / 桶 / 客户端渲染）+ 两条 Create 配方：粉尘水洗成晶体、晶体加热搅拌出原液 |
 | 1.9.7 | 原液贴图改为纯紫（去掉噪点纹理），tint 改白色；原液桶改为复用原版 water_bucket 像素布局 |
 | 1.9.8 | 原液由 155,107,224 压深到 88,48,145；桶内水面按同一基色等比缩放，避免桶比液面亮 |
+| 1.9.9 | 纯文档修正：Ponder 中英文案改为实际规则（露天 / 亮度 ≥9 / 魔法树叶 / 32×32 终身 5 只 / 粉尘必掉 / 2–4 经验），mods.toml 描述去掉 "directional"，README 重写 |
+| 1.9.10 | 原液贴图改为复用原版 water_still/water_flow 的 32 帧结构 + 紫色映射（告别纯色块），方块模型 parent 改为 minecraft:block/water，配 mcmeta animate。**中间包，被 1.9.11 取代** |
+| 1.9.11 | 移除用于截图验证的 `__probe` 临时类（1.9.10 的 jar 里混进了探针，会强制 45 tick 后关游戏）。内容与 1.9.10 完全一致，**1.9.10 勿用** |
+| 1.9.12 | 魔法蛋糕 + 紫色火焰：新增 `magicinduction:magic_cake`（注液器：烈焰蛋糕胚 + 250 mB 魔法原液）与 `magic_cake_from_filling` 配方；右键烈焰人燃烧室写入 `magicinduction:magic_cake` 标记，该炉燃料期间火焰改为紫色。紫色火焰用原版 fire_0/fire_1 的 32 帧像素重新上色（371/375 色），十字面片几何；因为 Create 6.x 走 Flywheel visual，额外包一层 `BlockEntityVisualizer` 让吃过蛋糕的炉子掉回 BE 渲染路径 |
 
 ## 构建环境
 
@@ -51,3 +55,43 @@ LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe xvfb-run -a -s "-screen 0 1280x7
 ```
 
 截图落在 `run/screenshots/`，日志 `run/logs/latest.log`。
+
+## 踩过的坑（别重复）
+
+**客户端渲染**
+
+1. `TextureAtlasSprite.getU(double)` / `getV(double)` 的参数单位是 **16 像素**，不是 0~1。
+   反编译可见 `v0 + (v1 - v0) * value / 16.0F`。按 0~1 传参，UV 被压缩 16 倍，
+   整簇火焰退化成一块纯色方块——不报错，只是看着像贴图丢了。
+2. `RenderType.cutout()` 用 `DefaultVertexFormat.BLOCK`，元素顺序是
+   位置 → 颜色 → UV0 → overlay → light → **法线**。
+   少填法线会在 `endVertex()` 抛 `IllegalStateException: Not filled all elements of the vertex`，
+   并让**整帧**的火焰都画不出来。
+3. 同一平面在两个互为 180° 的角度各画一遍 = 共面 z-fighting，画面全是闪烁噪点。
+   双面画一次就够（`emitQuad` 里正反两遍绕序）。
+4. 帧数别写死：`sprite.contents().height() / 16`。
+   原版 `fire_0` 是**单帧 16×16**（动画由 mcmeta 驱动），按 32 帧算会越界采样到
+   图集里相邻的贴图上，表现为「原版火焰显示成别的贴图」。
+
+**Create 6.x 联动**
+
+5. 燃烧室走 Flywheel 的 `BlazeBurnerVisual`，注册 `BlockEntityRenderer` 不会被调用；
+   必须给 `BlockEntityVisualizer` 包一层，用 `createVisual` 返回 null +
+   `skipVanillaRender` 返回 false 让它逐实例掉回原版路径。这两个返回值必须严格互补。
+6. Create 6.0.8 的发布 jar 不含 Registrate → 不能引用 `AllBlockEntityTypes.HEATER`，
+   要按 key（`create:blaze_burner`）从 `ForgeRegistries.BLOCK_ENTITY_TYPES` 反查。
+7. **任何 import 了 Create 类的类都不能带 `@Mod.EventBusSubscriber`**：Forge 的
+   `AutomaticEventSubscriber` 只看注解不看 ModList，没装 Create 时会在构造期
+   `NoClassDefFoundError`，整个 mod 加载失败。改成 `ModList.isLoaded("create")` 后手动 register。
+
+**开发环境跑客户端**
+
+8. 必须有虚拟显示：`Xvfb :99 -screen 0 1280x720x24` + `DISPLAY=:99`，
+   否则 `fmlearlywindow` 直接 `Unable to initialize GLFW` 退出。
+9. 探针截图路径别用 `mc.gameDirectory.toPath().getParent()`——runClient 的 gameDir 是
+   相对路径 `.`，`getParent()` 是 null。用 `new File("probe_shots").getAbsoluteFile()`。
+10. 想移动相机别用 `player.setPos`，会被服务端的 "moved wrongly" 纠偏弹回来；
+    走 `/tp @a x y z yaw pitch`。
+11. **装了 Create 就跑不了 runClient**：Flywheel / Create 的 mixin refmap 在 userdev
+    （official 映射）下缺 SRG 名，客户端一进世界就崩。要测自己的渲染就走
+    「临时探针 + 不装 Create」这条路，把待验证的火焰几何单独画出来看。

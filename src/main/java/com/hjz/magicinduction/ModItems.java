@@ -113,6 +113,28 @@ public class ModItems {
             () -> new BucketItem(ModFluids.MANA_ESSENCE,
                     new Item.Properties().stacksTo(1).craftRemainder(Items.BUCKET)));
 
+    /**
+     * 魔法蛋糕 —— 烈焰蛋糕胚浇 250 mB 魔法原液的产物。
+     *
+     * <p>purpose: 把"原液"这桶死物变成一个能喂生物的东西，顺便给原液开第二条出口。
+     * 在它之前，原液只有"倒在地上"和"装桶"两种命运，玩家辛苦搭出搅拌产线，
+     * 得到的却是一个没有用途的罐子——这是整个 mod 里最长的一段空转。
+     *
+     * <p>design note: 普通的 {@link Item}，不是 {@code food()}。理由有两条：
+     * <ul>
+     *   <li>玩家不该啃它。蛋糕是给蝴蝶的，人能吃掉的话，"专门喂给谁"这件事就模糊了；</li>
+     *   <li>食物属性会把它塞进 {@code #minecraft:is_food} 相关逻辑（狼/狐狸抢食、
+     *       饥饿值界面提示），那些行为都不该出现。</li>
+     * </ul>
+     * 喂食入口写在 {@link com.hjz.magicinduction.common.ManaButterfly} 的 mobInteract 里。
+     *
+     * <p>获取途径：只有 Create 的注液器（spout）一条路。没装 Create 时这个物品仍然存在、
+     * 仍然能在创造模式物品栏里拿到，只是做不出来——配方在
+     * {@code recipes/magic_cake_from_filling.json} 里被 {@code forge:mod_loaded} 包着。
+     */
+    public static final RegistryObject<Item> MAGIC_CAKE = ITEMS.register("magic_cake",
+            () -> new com.hjz.magicinduction.common.MagicCakeItem(new Item.Properties()));
+
     public static void register(IEventBus bus) {
         ITEMS.register(bus);
     }

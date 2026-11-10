@@ -1,0 +1,12 @@
+{
+  "sources": [
+    {
+      "type": "minecraft:single",
+      "resource": "magicinduction:block/magic_flame_0"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "magicinduction:block/magic_flame_1"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:mod_loaded",
+          "modid": "create"
+        }
+      ],
+      "recipe": {
+        "type": "create:filling",
+        "ingredients": [
+          {
+            "item": "create:blaze_cake_base"
+          },
+          {
+            "amount": 250,
+            "fluid": "magicinduction:mana_essence",
+            "nbt": {}
+          }
+        ],
+        "results": [
+          {
+            "item": "magicinduction:magic_cake"
+          }
+        ]
+      }
+    }
+  ]
+}

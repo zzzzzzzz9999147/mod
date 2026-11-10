@@ -33,6 +33,9 @@ public class ModCreativeTabs {
                         output.accept(ModItems.MAGIC_ORE_ITEM.get());
                         output.accept(ModItems.MAGIC_CRYSTAL.get());
                         output.accept(ModItems.MANA_DUST.get());
+                        // 魔法蛋糕排在最后：它是"成品"，依赖 Create 的注液器才能做出来，
+                        // 放在原料后面更像一条产线的终点。
+                        output.accept(ModItems.MAGIC_CAKE.get());
                     })
                     .build());
 

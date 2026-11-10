@@ -3,6 +3,7 @@ package com.hjz.magicinduction;
 import com.hjz.magicinduction.common.ModFluids;
 import com.mojang.logging.LogUtils;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
@@ -24,6 +25,25 @@ public class MagicInduction {
         ModBlockEntities.register(modBus);
         ModEntities.register(modBus);
         ModCreativeTabs.register(modBus);
+
+        // 与机械动力的联动只有一处需要 Java 侧代码（蛋糕喂燃烧室），
+        // 所以单独拿一个类出来，并且只在 Create 存在时才碰它。
+        // 关键：if 判断放在这一层，compat 包里的类在没装 Create 时根本不会被加载，
+        // 它的 import（BlazeBurnerBlockEntity 等）也就不会被解析，
+        // 不会出现 NoClassDefFoundError。如果把判断写进那个类内部就晚了——
+        // 类加载发生在方法执行之前。
+        if (ModList.get().isLoaded("create")) {
+            // forge 总线：右键拦截（MagicCakeEvents）
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(
+                    com.hjz.magicinduction.compat.MagicCakeEvents.class);
+            LOGGER.info("[Magic Induction] Create detected, magic cake hooked to blaze burners.");
+
+            // mod 总线：RegisterRenderers（MagicFlameClient）。
+            // 紫色火焰只在客户端有意义，DistExecutor 保证专用服务端不会碰渲染类。
+            net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(
+                    net.minecraftforge.api.distmarker.Dist.CLIENT,
+                    () -> () -> modBus.register(com.hjz.magicinduction.compat.MagicFlameClient.class));
+        }
 
         LOGGER.info("[Magic Induction] loaded.");
     }

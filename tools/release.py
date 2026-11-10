@@ -59,6 +59,17 @@ def pack(mod_id: str, version: str) -> tuple[pathlib.Path, pathlib.Path]:
         sys.exit(f"找不到构建产物 {jar_src}")
 
     DIST.mkdir(exist_ok=True)
+
+    # 防呆：临时探针（截图/自动停服）绝不能被发出去。
+    # 1.9.10 就是这么翻的车 —— 探针混进 jar，玩家 45 tick 后游戏自己关了。
+    with zipfile.ZipFile(jar_src) as zf:
+        probes = [n for n in zf.namelist() if "__probe" in n]
+    if probes:
+        sys.exit(
+            "拒绝打包：jar 里含临时探针类 " + ", ".join(probes) +
+            "\n先删除 src/main/java/.../__probe/ 再重跑。"
+        )
+
     jar_dst = DIST / jar_src.name
     shutil.copy2(jar_src, jar_dst)
 

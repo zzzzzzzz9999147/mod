@@ -45,6 +45,16 @@ public final class ClientSetup {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
+            // 紫色火焰：包一层 Create 的 Flywheel visualizer。
+            // 双重守卫：ModList 判 Create，DistExecutor 判客户端（本类本来就是 CLIENT 专用，
+            // 这里只是保证专用服务端不会通过反射走到这条路径）。
+            // PurpleFlameVisuals 的方法体里引用 Flywheel 类型，所以只能在 isLoaded 之后碰它。
+            if (net.minecraftforge.fml.ModList.get().isLoaded("create")) {
+                net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(
+                        net.minecraftforge.api.distmarker.Dist.CLIENT,
+                        () -> com.hjz.magicinduction.compat.PurpleFlameVisuals::install);
+            }
+
             ItemProperties.register(
                     ModItems.BUTTERFLY_JAR.get(),
                     new ResourceLocation(MagicInduction.MODID, "butterflies"),

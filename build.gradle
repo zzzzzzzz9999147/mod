@@ -23,6 +23,11 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            // 让 Mixin 在开发环境也按 refmap 把 SRG 名（f_143509_ 这类）重映射到
+            // 当前 dev 命名空间。Create 6.x / Flywheel 1.0.x 的 mixin 写的是 SRG，
+            // 不打开这个开关会在 Apply 阶段直接 FATAL，整个游戏起不来。
+            jvmArgs '-Dmixin.env.remapRefMap=true',
+                    "-Dmixin.env.refMapRemappingFile=${projectDir}/build/createSrgToMcp/output.srg"
             mods {
                 "${mod_id}" {
                     source sourceSets.main
@@ -53,15 +58,50 @@ repositories {
         name = 'Sponge'
         url = 'https://repo.spongepowered.org/repository/maven-public/'
     }
-    // 注意：这里故意不引入 Create 的 maven 依赖。
-    // 我们对 Create 的全部耦合都写在数据包里（create:splashing / create:mixing 两个配方 JSON），
-    // 代码里没有任何 import。加 compileOnly/runtimeOnly 只会让每次构建去 Modrinth CDN
-    // 拉 19 MB 的 jar（单连接限速约 11 KB/s，实测能把构建拖到 30 分钟以上），纯属自找麻烦。
-    // 如果以后真的要调用 Create 的 Java API，再按需加回来。
+    // Create 的 maven 仓库。只用于编译期解析 BlazeBurnerBlockEntity 等少数几个类
+    // （见下方 compileOnly），运行期绝不打包进 jar。
+    maven {
+        name = 'CreateModrinth'
+        url = 'https://api.modrinth.com/maven'
+        content {
+            includeGroup 'maven.modrinth'
+        }
+    }
+    // Create 6.x 把 Ponder 拆成了独立库（net.createmod.ponder），
+    // 而 SmartBlockEntity / BlazeBurnerBlockEntity 的父类链依赖它。
+    // 只加 Create 不够——javac 解析父类时会报 "class file for
+    // net.createmod.ponder.api.VirtualBlockEntity not found"。
+    maven {
+        name = 'CreateMaven'
+        url = 'https://maven.createmod.net'
+        content {
+            includeGroup 'net.createmod.ponder'
+            includeGroup 'net.createmod.catnip'
+            includeGroup 'dev.engine-room.flywheel'
+        }
+    }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    // ── 与机械动力的耦合 ────────────────────────────────────────────────
+    // 大部分联动仍然走数据包（splashing / mixing / filling 三个配方），不需要这行。
+    // 但"魔法蛋糕喂给烈焰人燃烧室 → 紫色火焰"这件事没有配方类型可以表达，
+    // 必须调用 BlazeBurnerBlockEntity#getActiveFuel 判断燃料等级、写入自定义 NBT，
+    // 所以这里加一个 compileOnly。
+    //
+    // compileOnly 而不是 implementation：jar 里不会带上任何 Create 的类，
+    // 没装 Create 的整合包照常启动；调用点全部由 MagicCakeEvents 包裹 try/catch
+    // 并按 ModList 判定，类不存在时这些方法体根本不会被解析。
+    compileOnly fg.deobf('maven.modrinth:create:mc1.20.1-6.0.8')
+    // Create 6.x 的父类链依赖 Ponder（VirtualBlockEntity 等），javac 必须能解析到。
+    // 同样 compileOnly，不进 jar。
+    compileOnly "net.createmod.ponder:Ponder-Forge-1.20.1:1.0.92"
+    // 紫色火焰渲染器要调 CachedBuffers.partial(...) 等 API，签名里带 Flywheel 的
+    // PartialModel / Transform。Ponder 的 pom 没有把 Flywheel 声明成传递依赖，
+    // 所以这里得自己补上，否则 javac 报 "cannot access PartialModel"。
+    compileOnly "dev.engine-room.flywheel:flywheel-forge-1.20.1:1.0.1"
 }
 
 tasks.named('processResources', ProcessResources).configure {

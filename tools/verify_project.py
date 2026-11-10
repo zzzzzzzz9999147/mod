@@ -110,9 +110,24 @@ for path in walk(JAVA, ".java"):
 notes.append(f"注册: 方块 {len(block_names)} / 物品 {len(item_names)} / 实体 {len(entity_names)}")
 
 # -------------------------------------- 5. every block needs state + loot + tag
+# 声明了 noLootTable() 的方块（例如流体方块）挖掉本就不该掉落任何东西，
+# 没有战利品表是正确状态，不算缺失。
+_no_loot_blocks = set()
+_blocks_src = ""
+for _p in walk(JAVA, ".java"):
+    if _p.endswith("ModBlocks.java"):
+        _blocks_src = open(_p, encoding="utf-8").read()
+        break
+for _chunk in _blocks_src.split("BLOCKS.register(")[1:]:
+    _m = re.search(r'"([a-z0-9_]+)"', _chunk)
+    if _m and "noLootTable()" in _chunk:
+        _no_loot_blocks.add(_m.group(1))
+
 for name in sorted(block_names):
     if not os.path.isfile(os.path.join(ASSETS, "blockstates", name + ".json")):
         fail(f"方块 {name} 缺少 blockstates/{name}.json")
+    if name in _no_loot_blocks:
+        continue
     loot = os.path.join(DATA, "magicinduction", "loot_tables", "blocks", name + ".json")
     if not os.path.isfile(loot):
         fail(f"方块 {name} 缺少战利品表 loot_tables/blocks/{name}.json")
