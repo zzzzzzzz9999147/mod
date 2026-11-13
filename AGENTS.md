@@ -42,6 +42,7 @@ python3 tools/release.py --no-bump
 | 1.9.10 | 原液贴图改为复用原版 water_still/water_flow 的 32 帧结构 + 紫色映射（告别纯色块），方块模型 parent 改为 minecraft:block/water，配 mcmeta animate。**中间包，被 1.9.11 取代** |
 | 1.9.11 | 移除用于截图验证的 `__probe` 临时类（1.9.10 的 jar 里混进了探针，会强制 45 tick 后关游戏）。内容与 1.9.10 完全一致，**1.9.10 勿用** |
 | 1.9.12 | 魔法蛋糕 + 紫色火焰：新增 `magicinduction:magic_cake`（注液器：烈焰蛋糕胚 + 250 mB 魔法原液）与 `magic_cake_from_filling` 配方；右键烈焰人燃烧室写入 `magicinduction:magic_cake` 标记，该炉燃料期间火焰改为紫色。紫色火焰用原版 fire_0/fire_1 的 32 帧像素重新上色（371/375 色），十字面片几何；因为 Create 6.x 走 Flywheel visual，额外包一层 `BlockEntityVisualizer` 让吃过蛋糕的炉子掉回 BE 渲染路径 |
+| 1.9.16 | **紫火定案**：贴图竖向收口（原版帧是横向火墙）、面片改用 Create `blaze_flame.obj` 包围盒（y 0.25~1.0）、修背面绕序、Flywheel `recreateAll` 清掉旧橙色实例、覆盖 `assets/minecraft/particles/flame.json` 去掉橙色粒子。1.9.13–1.9.15 只有贴图调整，均被本版取代 |
 
 ## 构建环境
 
@@ -95,3 +96,37 @@ LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe xvfb-run -a -s "-screen 0 1280x7
 11. **装了 Create 就跑不了 runClient**：Flywheel / Create 的 mixin refmap 在 userdev
     （official 映射）下缺 SRG 名，客户端一进世界就崩。要测自己的渲染就走
     「临时探针 + 不装 Create」这条路，把待验证的火焰几何单独画出来看。
+12. **生产客户端测模组时，`mods/` 里放的是旧 jar 会让你白调半天**：`gradlew build`
+    的产物在 `build/libs/`，它不会自动同步到 `/root/mc/mods/`。改完代码忘记 `cp`，
+    屏幕上就是旧行为的截图，日志里也找不到新加的打印——非常容易误判成"代码没生效"。
+    每次跑之前 `md5sum` 比对一下两边的 jar。
+13. **`assets/magicinduction/atlases/blocks.json` 不能留空**：临时改成
+    `{"sources": []}` 之后 `spriteFor()` 只能拿到 missing sprite，
+    火焰会退化成紫黑相间的棋盘格。改完记得恢复 `minecraft:single` 条目。
+
+**紫色火焰专项（1.9.16 定案）**
+
+14. **原版 `fire_0` 的帧是横向火墙，不是竖直火苗**：每一帧都铺满 16 像素宽
+    （它要盖住整个方块面）。把它当竖直面片的贴图，屏幕上是一条横向紫色色带。
+    必须在生成器里按行做竖向收口（`narrow_to_pyramid`），底端两行保留满宽当炉口燃面。
+15. **面片几何直接抄 Create 的 `blaze_flame.obj` 包围盒**：x/z 0.125~0.875、y 0.25~1.0。
+    自己拍脑袋定 0.10~0.82 的结果是火根埋进炉口、火顶又比烈焰人矮，远看像紫色贴纸。
+16. **顶点的绕序：外法线配顺时针**。Minecraft 1.20.x 用 JK 引擎的球坐标判面朝向，
+    JC 项里 θ 方向反了，所以"外法线 + 逆时针"在引擎眼里是背面。
+    症状是正面看不见、绕到炉子背后反倒能看到火焰浮在方块前面。
+17. **换掉 visualizer 不会销毁已经建好的实例**：区块加载时 Create 的
+    `BlazeBurnerVisual` 就已经把烈焰人本体 + 笼子 + **橙色火焰** 建成 Flywheel 实例了。
+    `setVisualizer` 只影响之后新建的实例，所以橙色火焰会一直盖在紫火下面
+    （表现：紫火只在橙火**上方**露出一截，炉口永远是橙的）。
+    解法是调 Flywheel 的 `Storage.recreateAll(ctx, partialTick)` 全量重建。
+18. **`recreateAll` 不能在 `LevelEvent.Load` 里调**：那时
+    `VisualizationManagerImpl.lateInit` 还是 null（引擎要到第一次渲染世界才建），
+    拿不到 `VisualizationContext`。改到客户端每个 tick 检查一次，第一次拿到就重建并收手。
+    Context 的获取路径是 manager → 私有字段 `lateInit` → 私有字段 `engine` →
+    `createVisualizationContext()`。
+19. **炉口上方那几簇橙色火苗是粒子，不是模型**：`BlazeBurnerBlockEntity.spawnParticles`
+    每 tick 撒 `ParticleTypes.FLAME`（超级加热还有 `LARGE_SMOKE`，普通有 `SMOKE`）。
+    换渲染器只换掉模型里的火。因为项目没有 Mixin，这里用资源包覆盖
+    `assets/minecraft/particles/flame.json` 指向紫色 sprite
+    （`assets/magicinduction/textures/particle/magic_flame.png`）。
+    代价：原版火把/营火的**粒子**也变紫——本项目主题就是紫色魔法火，可接受。

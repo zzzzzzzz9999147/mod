@@ -6,63 +6,97 @@ import com.simibubi.create.content.processing.burner.BlazeBurnerBlockEntity;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.EntityRenderersEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.api.distmarker.OnlyIn;
+
+import java.util.Map;
 
 /**
- * 紫色火焰的客户端接线：替换燃烧室渲染器。
+ * 紫色火焰的客户端接线：把燃烧室的渲染器换成 {@link PurpleBlazeBurnerRenderer}。
  *
- * <h2>这个类为什么必须手动注册，不能靠 @Mod.EventBusSubscriber 自动订阅</h2>
- * 它 import 了 {@code BlazeBurnerBlockEntity}。没装 Create 时这类一旦被加载就是
- * {@code NoClassDefFoundError}，而 Forge 的自动订阅会在 mod 构造期就去读它。
+ * <h2>为什么不能用 {@code EntityRenderersEvent.RegisterRenderers} 注册</h2>
+ * 这条是实测出来的，不是猜的：
  *
- * <p>所以本类<b>不能</b>写 {@code @Mod.EventBusSubscriber}：
- * Forge 的 {@code AutomaticEventSubscriber} 只看注解不看 ModList，
- * 一加注解就会在 mod 构造期触发类加载，没装 Create 时整个 mod 加载失败。
- * 由 {@code MagicInduction} 在确认 Create 存在后手动 register。
+ * <p>Create 6.x 的方块实体渲染器不是自己 {@code register} 的，而是交给
+ * Registrate（Create 用 JarJar 内嵌的一份）批量注册。Registrate 的注册时机
+ * <b>晚于</b> Forge 派发 {@code RegisterRenderers}。事件已经结束，它的
+ * {@code .register()} 才落到 {@code BlockEntityRenderers.PROVIDERS} 里。
  *
- * <h2>贴图登记不在这里</h2>
- * 1.20.1 的 Forge 没有 {@code TextureStitchEvent.Pre}（只有 Post），
- * 贴图进图集要写 {@code assets/magicinduction/atlases/blocks.json}，
- * 用 {@code minecraft:single} source 显式声明。见该文件。
+ * <p>表现（已用探针确认）：我们在事件里 register 之后，
+ * {@code BlockEntityRenderDispatcher.getRenderer(be)} 拿到的仍然是
+ * {@code com.simibubi.create...BlazeBurnerRenderer}；日志里我们自己的
+ * "renderer replaced" 打印了，但渲染器一次都没被调用，颜色当然也不会变。
+ * 把订阅优先级改成 LOWEST 也没用——问题不在事件内部顺序，而在事件之后还有写入。
+ *
+ * <h2>所以改成"最后一步直接改写静态表"</h2>
+ * {@code FMLLoadCompleteEvent} 是加载流程的终点：所有 mod 的注册、
+ * 所有 Registrate 的 deferred 注册、所有事件都跑完了，之后才开始渲染。
+ * 在这一刻把 {@code PROVIDERS} 里的那一条替换掉，就没有东西能再覆盖它。
+ *
+ * <p>用反射访问 {@code PROVIDERS}：1.20.1 里 {@code register} 是 private
+ * （public 的只有 {@code create(Context)}）。反射失败时只记一条 warn、不抛异常——
+ * 渲染器没换掉最坏结果是"紫火不出现"，不该让玩家开不了游戏。
  */
+@OnlyIn(Dist.CLIENT)
 public final class MagicFlameClient {
+
+    /**
+     * {@code BlockEntityRenderers.PROVIDERS}（SRG: {@code f_173587_}）。
+     *
+     * <p>官方映射下字段名是 {@code PROVIDERS}；保留 SRG 名兜底是为了兼容
+     * 少数运行时仍以 SRG 名反射的环境。取不到就是 null，由调用方降级。
+     */
+    private static final java.lang.reflect.Field PROVIDERS = findProviders();
 
     private MagicFlameClient() {
     }
 
-    /**
-     * 用 {@link PurpleBlazeBurnerRenderer} 顶掉 Create 的燃烧室渲染器。
-     *
-     * <p>{@code BlockEntityRenderers.register} 底层就是一次 {@code Map.put}，
-     * 后注册的覆盖先注册的。Forge 的 {@code RegisterRenderers} 事件在
-     * Create 用 Registrate 注册完之后才派发，所以这次 register 会生效。
-     *
-     * <p>按注册名反查而<b>不</b>引用 {@code AllBlockEntityTypes.HEATER}：
-     * 后者类型是 Registrate 的 {@code BlockEntityEntry}，而 Create 6.0.8 的发布 jar
-     * 里不含 Registrate（整个 {@code com.tterrag.registrate.*} 缺失），
-     * 引用它会让 javac 报 {@code cannot access BlockEntityEntry}。
-     */
-    @SubscribeEvent
-    public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        for (BlockEntityType<?> type : ForgeRegistries.BLOCK_ENTITY_TYPES.getValues()) {
-            var key = ForgeRegistries.BLOCK_ENTITY_TYPES.getKey(type);
-            if (key == null || !"create".equals(key.getNamespace()) || !"blaze_burner".equals(key.getPath())) {
-                continue;
+    private static java.lang.reflect.Field findProviders() {
+        for (String name : new String[]{"PROVIDERS", "f_173587_"}) {
+            try {
+                java.lang.reflect.Field f =
+                        net.minecraft.client.renderer.blockentity.BlockEntityRenderers.class.getDeclaredField(name);
+                f.setAccessible(true);
+                return f;
+            } catch (NoSuchFieldException ignored) {
+                // 试下一个名字
             }
-            registerFor(event, type);
-            MagicInduction.LOGGER.info("[Magic Induction] blaze burner renderer replaced (purple flame enabled).");
-            return;
         }
-        MagicInduction.LOGGER.warn("[Magic Induction] create:blaze_burner block entity type not found; "
-                + "magic cake will still feed burners but the flame stays orange.");
+        return null;
     }
 
+    /**
+     * 在加载流程最后一步（{@code FMLLoadCompleteEvent}）替换渲染器。
+     *
+     * <p>类加载安全：本类只被 {@code MagicInduction} 在确认 Create 存在后加载，
+     * 而且没有 {@code @Mod.EventBusSubscriber}——Forge 的自动订阅只看注解不看 ModList，
+     * 加了注解会在没装 Create 时触发类加载 → {@code NoClassDefFoundError}。
+     */
     @SuppressWarnings("unchecked")
-    private static void registerFor(EntityRenderersEvent.RegisterRenderers event, BlockEntityType<?> type) {
-        event.registerBlockEntityRenderer(
-                (BlockEntityType<BlazeBurnerBlockEntity>) type,
-                (BlockEntityRendererProvider.Context ctx) -> new PurpleBlazeBurnerRenderer(ctx));
+    public static void installRenderer() {
+        BlockEntityType<?> type = BlazeBurnerLookup.findOrWarn("the purple flame renderer was not installed");
+        if (type == null) {
+            return;
+        }
+        if (PROVIDERS == null) {
+            MagicInduction.LOGGER.warn("[Magic Induction] BlockEntityRenderers.PROVIDERS is not accessible; "
+                    + "the magic cake will still work but the flame stays orange.");
+            return;
+        }
+
+        try {
+            BlockEntityRendererProvider<BlazeBurnerBlockEntity> provider = PurpleBlazeBurnerRenderer::new;
+            Map<BlockEntityType<?>, BlockEntityRendererProvider<?>> providers =
+                    (Map<BlockEntityType<?>, BlockEntityRendererProvider<?>>) PROVIDERS.get(null);
+            if (providers == null) {
+                MagicInduction.LOGGER.warn("[Magic Induction] BlockEntityRenderers.PROVIDERS was null; "
+                        + "the flame stays orange.");
+                return;
+            }
+            providers.put(type, provider);
+            MagicInduction.LOGGER.info("[Magic Induction] blaze burner renderer replaced (purple flame enabled).");
+        } catch (IllegalAccessException e) {
+            MagicInduction.LOGGER.warn("[Magic Induction] could not replace the blaze burner renderer; "
+                    + "the flame stays orange.", e);
+        }
     }
 }

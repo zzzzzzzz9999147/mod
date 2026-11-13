@@ -38,11 +38,16 @@ public class MagicInduction {
                     com.hjz.magicinduction.compat.MagicCakeEvents.class);
             LOGGER.info("[Magic Induction] Create detected, magic cake hooked to blaze burners.");
 
-            // mod 总线：RegisterRenderers（MagicFlameClient）。
+            // mod 总线：渲染器替换必须等到加载流程最后一步（FMLLoadCompleteEvent），
+            // 因为 Create 的 Registrate 在 RegisterRenderers 事件之后才写入渲染器表。
             // 紫色火焰只在客户端有意义，DistExecutor 保证专用服务端不会碰渲染类。
             net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(
                     net.minecraftforge.api.distmarker.Dist.CLIENT,
-                    () -> () -> modBus.register(com.hjz.magicinduction.compat.MagicFlameClient.class));
+                    () -> () -> {
+                        modBus.addListener((net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent e) ->
+                                com.hjz.magicinduction.compat.MagicFlameClient.installRenderer());
+                        LOGGER.info("[Magic Induction] purple flame renderer queued for load-complete.");
+                    });
         }
 
         LOGGER.info("[Magic Induction] loaded.");

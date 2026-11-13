@@ -11,6 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.client.event.ScreenEvent;
@@ -42,6 +43,51 @@ public final class ClientForgeEvents {
     private static long lastHoverStamp = 0L;
 
     private ClientForgeEvents() {
+    }
+
+    /**
+     * 客户端世界加载完成时，把烈焰人燃烧室从 Flywheel 手里接过来。
+     *
+     * <p>为什么不在 {@code FMLClientSetupEvent} 里做：Create 也在同一个事件里
+     * {@code enqueueWork} 注册它的 visualizer，两个 mod 的排队顺序不确定，
+     * 谁后注册谁生效——先注册的一方等于没做。{@code LevelEvent.Load} 一定晚于
+     * 所有客户端初始化，而区块还没开始编译，是唯一稳妥的时机。
+     *
+     * <p>类加载安全：本类不 import 任何 Create 类型，Create 只在字符串里出现；
+     * 具体实现放在 {@code compat.PurpleFlameVisuals} 里，由 ModList 判定后再加载。
+     */
+    @SubscribeEvent
+    public static void onLevelLoad(LevelEvent.Load event) {
+        if (!event.getLevel().isClientSide()) {
+            return;
+        }
+        if (!net.minecraftforge.fml.ModList.get().isLoaded("create")) {
+            return;
+        }
+        net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(
+                Dist.CLIENT,
+                () -> com.hjz.magicinduction.compat.PurpleFlameVisuals::install);
+    }
+
+    /**
+     * 每个客户端 tick 检查一次"要不要把已有的 Flywheel 实例重建掉"。
+     *
+     * <p>为什么不在 {@link #onLevelLoad} 里做完：那时 Flywheel 的引擎还没建，
+     * 拿不到 {@code VisualizationContext}（见 {@code PurpleFlameVisuals.tickRecreate} 的注释）。
+     * 这个方法自己判断"引擎没就绪就下一 tick 再试"，重建成一次后就不再干活，
+     * 不是每 tick 都反射一遍。
+     */
+    @SubscribeEvent
+    public static void onClientTick(net.minecraftforge.event.TickEvent.ClientTickEvent event) {
+        if (event.phase != net.minecraftforge.event.TickEvent.Phase.END) {
+            return;
+        }
+        if (!net.minecraftforge.fml.ModList.get().isLoaded("create")) {
+            return;
+        }
+        net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(
+                Dist.CLIENT,
+                () -> com.hjz.magicinduction.compat.PurpleFlameVisuals::tickRecreate);
     }
 
     @SubscribeEvent
