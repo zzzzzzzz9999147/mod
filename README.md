@@ -137,6 +137,23 @@ Minecraft **Java 版 1.20.1 / Forge 47.4.28** 的小型机制模组：魔力蝴�
 
 手持魔法蛋糕右键烈焰人燃烧室，这一炉燃料期间火焰换成紫色，燃料烧完自动恢复橙色。蛋糕本身不进玩家的胃，只喂炉子；一次只影响这一个炉子。
 
+**喂食机制与 Create 原版烈焰蛋糕逐项相同**（不是"仿制"，是走同一段代码）：
+
+| 环节 | 本 mod | 原版烈焰蛋糕 |
+|---|---|---|
+| 燃料身份 | `#create:blaze_burner_fuel/special` 标签 + `getBurnTime` = 3200 | 同标签 + `CombustibleItem` 6400（SPECIAL 分支写死 3200） |
+| 写炉入口 | `BlazeBurnerBlockEntity.tryUpdateFuel(stack, true, true)` | `BlazeBurnerBlock.tryInsert` → 同一个方法 |
+| 燃料等级 | `FuelType.SPECIAL` | `FuelType.SPECIAL` |
+| 燃烧时长 | 3200 tick | 3200 tick |
+| 方块状态 | `HEAT_LEVEL` 推到 `SEETHING` | 同 |
+| 音效 / 粒子 | Create 的 `playSound()` / `spawnParticleBurst(true)` | 同 |
+| 消耗 | 成功扣 1 个 | 同 |
+| 空炉子（`HEAT_LEVEL=NONE`） | 无 BlockEntity，喂不进 | 同 |
+
+唯一额外动作是成功后往方块实体的 `persistentData` 写一个 `magicinduction:magic_cake` 标记，渲染层只认这个标记。所以**除了魔法蛋糕，没有任何东西能把火焰变紫**：烈焰蛋糕喂进去同样会变 `SEETHING`，但标记是 false，火焰仍是橙色；再往紫火炉里补烈焰蛋糕也不会把标记洗掉或让火变橙。
+
+> 实测记录（`/root/mc/run_cake.log`，1.9.16 构建）：魔法蛋糕与烈焰蛋糕喂同一个 `KINDLED` 炉，两者都是 `use=SUCCESS`、`fuel=SPECIAL`、`remain=3200`、`heat=SEETHING`；紫火炉补烈焰蛋糕后 `sated` 仍为 true。
+
 **火焰是重新画的，不是给 Create 的火焰贴图调色相。** Create 的火焰模型 `blaze_burner/flame` 是一个「底宽顶窄的收口方柱」，四面各贴一张单帧 16×16 的图，换色之后玩家看到的只会是「一个被染紫的方柱」。这里改成原版火焰的做法：
 
 | 项 | Create 原版 | 本 mod |
@@ -157,6 +174,7 @@ Minecraft **Java 版 1.20.1 / Forge 47.4.28** 的小型机制模组：魔力蝴�
 
 | 版本 | 变更 |
 |---|---|
+| 1.9.17 | **机制对齐原版**：魔法蛋糕改走 Create 自己的 `tryUpdateFuel`（取代自己记账 + 额外补煤），并挂进 `#create:blaze_burner_fuel/special` 标签，燃料等级/时长/方块状态/音效/消耗与烈焰蛋糕逐项一致（见上表）。标记只由魔法蛋糕写入，烈焰蛋糕不会让火焰变紫。移除临时探针 |
 | 1.9.16 | **紫火真正落地**：贴图改为「竖向锥形收口」（原版 fire 是横向铺满的火墙，直接贴是色带不是火苗）；面片改用 Create `blaze_flame.obj` 的包围盒 y 0.25~1.0；修背面剔除绕序；**Flywheel 旧实例重建**（否则橙色火焰一直盖在紫火上）；原版 `particles/flame.json` 覆盖成紫色，去掉炉口悬浮的橙色粒子 |
 | 1.9.14 | 魔法蛋糕贴图改为**直接取烈焰蛋糕的像素图换色相**（11 色逐色映射到 253°–274° 的紫，亮度/饱和度原样保留），轮廓与烈焰蛋糕逐像素一致；`tools/gen_cake_asset.py` 从 Create jar 读源图 |
 | 1.9.13 | 魔法蛋糕贴图重画：按 Create 烈焰蛋糕的构图逐行对齐，色相换成紫 |

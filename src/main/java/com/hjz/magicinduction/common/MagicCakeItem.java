@@ -34,8 +34,37 @@ import java.util.List;
  */
 public class MagicCakeItem extends Item {
 
+    /**
+     * 燃烧时长（tick）。
+     *
+     * <p>3200 与 Create 的烈焰蛋糕在 {@code BlazeBurnerBlockEntity.tryUpdateFuel}
+     * 里拿到的值完全一致（烈焰蛋糕物品本身是 6400，进炉时被 SPECIAL 分支改成 3200）。
+     * 为了让魔法蛋糕走<b>完全相同</b>的那条分支，这里直接给物品本身挂 3200，
+     * 并在物品标签里把自己列进 {@code #create:blaze_burner_fuel/special}，
+     * 于是 Create 不需要任何改动就会把它当 SPECIAL 燃料烧。
+     *
+     * <p>为什么是 3200 而不是 6400：改 6400 会让紫火比原版烈焰蛋糕长一倍，
+     * "按原版机制做"就名不副实了；玩家对照烈焰蛋糕时会觉得数值被动过。
+     */
+    public static final int BURN_TICKS = 3200;
+
     public MagicCakeItem(Properties properties) {
         super(properties);
+    }
+
+    /**
+     * 燃烧值：让 {@code ForgeHooks.getBurnTime} 认这块蛋糕能烧 3200 tick。
+     *
+     * <p>Create 的 {@code tryUpdateFuel} 判定顺序是
+     * 「SPECIAL 标签 → {@code getBurnTime} → REGULAR 标签」。
+     * 有标签就够进 SPECIAL 分支了，但如果没有燃烧值，
+     * {@code tryUpdateFuel} 里 {@code remainingBurnTime} 的累加会出问题
+     * （第二参数 charge=true 时走"加到当前这一炉"的分支，需要正数）。
+     * 两个都给上，行为才和烈焰蛋糕逐 tick 一致。
+     */
+    @Override
+    public int getBurnTime(ItemStack itemStack, @Nullable net.minecraft.world.item.crafting.RecipeType<?> recipeType) {
+        return BURN_TICKS;
     }
 
     @Override

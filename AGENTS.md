@@ -43,6 +43,7 @@ python3 tools/release.py --no-bump
 | 1.9.11 | 移除用于截图验证的 `__probe` 临时类（1.9.10 的 jar 里混进了探针，会强制 45 tick 后关游戏）。内容与 1.9.10 完全一致，**1.9.10 勿用** |
 | 1.9.12 | 魔法蛋糕 + 紫色火焰：新增 `magicinduction:magic_cake`（注液器：烈焰蛋糕胚 + 250 mB 魔法原液）与 `magic_cake_from_filling` 配方；右键烈焰人燃烧室写入 `magicinduction:magic_cake` 标记，该炉燃料期间火焰改为紫色。紫色火焰用原版 fire_0/fire_1 的 32 帧像素重新上色（371/375 色），十字面片几何；因为 Create 6.x 走 Flywheel visual，额外包一层 `BlockEntityVisualizer` 让吃过蛋糕的炉子掉回 BE 渲染路径 |
 | 1.9.16 | **紫火定案**：贴图竖向收口（原版帧是横向火墙）、面片改用 Create `blaze_flame.obj` 包围盒（y 0.25~1.0）、修背面绕序、Flywheel `recreateAll` 清掉旧橙色实例、覆盖 `assets/minecraft/particles/flame.json` 去掉橙色粒子。1.9.13–1.9.15 只有贴图调整，均被本版取代 |
+| 1.9.17 | **魔法蛋糕机制对齐原版烈焰蛋糕**：删掉自写的"记账 + 补煤"，改为 `data/create/tags/items/blaze_burner_fuel_special.json` 把蛋糕挂进 `#create:blaze_burner_fuel/special`，再反射调 `BlazeBurnerBlockEntity.tryUpdateFuel(stack, true, true)`，燃料等级/时长/状态/音效/消耗全部由 Create 决定。标记只由魔法蛋糕写，烈焰蛋糕不变紫 |
 
 ## 构建环境
 
@@ -130,3 +131,15 @@ LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe xvfb-run -a -s "-screen 0 1280x7
     `assets/minecraft/particles/flame.json` 指向紫色 sprite
     （`assets/magicinduction/textures/particle/magic_flame.png`）。
     代价：原版火把/营火的**粒子**也变紫——本项目主题就是紫色魔法火，可接受。
+
+20. **喂燃烧室必须把物品真放进玩家手上**。`BlazeBurnerBlock.use()` 第一行就是 `player.getItemInHand(hand)`，
+   探针里直接 `block.use(level, player, hand, hit)` 而手上是空的，Create 会走"空手 → 打开烈焰人 GUI"分支，
+   永远返回 PASS，看起来像"魔法蛋糕不工作"。测的时候要么 `inventory.setItem(slot, stack)` + `selected = slot`
+   再 `setItemInHand`，要么直接调静态 `BlazeBurnerBlock.tryInsert(...)`。
+21. **`HEAT_LEVEL == NONE` 的燃烧室没有 BlockEntity**（`newBlockEntity` 直接返回 null），
+   所以任何"往空炉子塞燃料"的测试都会报 `no BE`——这不是 bug，原版烈焰蛋糕也一样喂不进空炉子。
+22. **`tryUpdateFuel` 的 `consume=true` 只做判定后 `return true`，不扣栈**；扣减由 `tryInsert` 负责。
+   自己调它时必须先 `stack.shrink(1)` 再打标记，顺序和 `tryInsert` 保持一致。
+23. **普通方块 `setBlock` 后同一 tick 读不到 BE 是正常的**，但更常见的原因是这段代码跑在 Render thread 上：
+   `ServerLevel.setBlock` 跨线程写数据会让 chunk 状态错乱。所有改世界的探针代码都要
+   `server.execute(() -> ...)` 丢到 Server thread。
